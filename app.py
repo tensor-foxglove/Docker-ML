@@ -1,17 +1,17 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from pydantic import BaseModel
 import pickle
-import numpy as np
 
 app = FastAPI()
+
+# Load your model
 model = pickle.load(open("model.pkl", "rb"))
 
-@app.get("/")
-def root():
-    return {"message": "ML model is ready!"}
+# Define input schema
+class InputData(BaseModel):
+    features: list[float]
 
 @app.post("/predict")
-async def predict(request: Request):
-    data = await request.json()
-    input_array = np.array(data["features"]).reshape(1, -1)
-    prediction = model.predict(input_array)
-    return {"prediction": prediction.tolist()}
+def predict(data: InputData):
+    prediction = model.predict([data.features])
+    return {"prediction": int(prediction[0])}
